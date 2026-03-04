@@ -108,6 +108,22 @@ export async function isDemoReviewer(): Promise<boolean> {
 }
 
 /**
+ * Demo sandbox guard for mutation endpoints.
+ * Returns a fake success response (NextResponse) if the current user is a
+ * demo reviewer, so the UI appears to work but nothing is persisted.
+ * Returns null for normal users → the route continues as usual.
+ *
+ * Usage in API routes:
+ *   const demo = await demoGuard();
+ *   if (demo) return demo;
+ */
+export async function demoGuard(): Promise<Response | null> {
+  if (!await isDemoReviewer()) return null;
+  const { NextResponse } = await import('next/server');
+  return NextResponse.json({ success: true, demo_mode: true });
+}
+
+/**
  * Rate-limit admin API requests by client IP.
  * Uses the default preset (10 req / 60s).
  * @returns `true` if the request is allowed, `false` if rate-limited.

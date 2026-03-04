@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePermission } from '@/lib/auth/admin-guard';
+import { requirePermission, demoGuard } from '@/lib/auth/admin-guard';
 import { adminClient } from '@/lib/supabase/admin';
 import { validateBody, zodErrorResponse, sessionUpdateSchema, isValidUUID } from '@/lib/validations/admin';
 
@@ -11,6 +11,8 @@ export async function PATCH(
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  const demo = await demoGuard();
+  if (demo) return demo;
 
   const { id } = await params;
   if (!isValidUUID(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePermission } from '@/lib/auth/admin-guard';
+import { requirePermission, demoGuard } from '@/lib/auth/admin-guard';
 import { adminClient } from '@/lib/supabase/admin';
 import { validateBody, zodErrorResponse, sequenceStepSchema, isValidUUID } from '@/lib/validations/admin';
 
@@ -11,6 +11,8 @@ interface Params { params: Promise<{ id: string; stepId: string }> }
 export async function PATCH(request: NextRequest, { params }: Params) {
   const user = await requirePermission('sequences.edit');
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const demo = await demoGuard();
+  if (demo) return demo;
 
   const { id, stepId } = await params;
   if (!isValidUUID(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
@@ -53,6 +55,8 @@ export async function PATCH(request: NextRequest, { params }: Params) {
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const user = await requirePermission('sequences.edit');
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const demo = await demoGuard();
+  if (demo) return demo;
 
   const { id, stepId } = await params;
   if (!isValidUUID(id)) return NextResponse.json({ error: 'Invalid ID' }, { status: 400 });
