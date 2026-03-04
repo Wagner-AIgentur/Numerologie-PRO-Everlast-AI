@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requirePermission, adminRateLimit } from '@/lib/auth/admin-guard';
+import { requirePermission, adminRateLimit, isDemoReviewer } from '@/lib/auth/admin-guard';
 import { adminClient } from '@/lib/supabase/admin';
 import { cached, CacheTags } from '@/lib/cache';
 
@@ -16,7 +16,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
   }
 
+  const isDemo = await isDemoReviewer();
+  const demoFilter = <T extends { eq: (col: string, val: boolean) => T }>(q: T) =>
+    isDemo ? q.eq('is_demo', true) : q;
+
   try {
+    const cacheKey = isDemo ? 'dashboard-stats-demo' : 'dashboard-stats';
     const stats = await cached(
       async () => {
         const [
@@ -25,10 +30,10 @@ export async function GET(request: NextRequest) {
           { count: offeneBestellungen },
           { count: geplanteTermine },
         ] = await Promise.all([
-          adminClient.from('profiles').select('*', { count: 'exact', head: true }).neq('crm_status', 'admin'),
-          adminClient.from('contact_submissions').select('*', { count: 'exact', head: true }).eq('status', 'new'),
-          adminClient.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'paid'),
-          adminClient.from('sessions').select('*', { count: 'exact', head: true }).eq('status', 'scheduled'),
+          demoFilter(adminClient.from('profiles').select('*', { count: 'exact', head: true }).neq('crm_status', 'admin')),
+          demoFilter(adminClient.from('contact_submissions').select('*', { count: 'exact', head: true }).eq('status', 'new')),
+          demoFilter(adminClient.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'paid')),
+          demoFilter(adminClient.from('sessions').select('*', { count: 'exact', head: true }).eq('status', 'scheduled')),
         ]);
 
         return {
@@ -38,7 +43,7 @@ export async function GET(request: NextRequest) {
           geplanteTermine: geplanteTermine ?? 0,
         };
       },
-      ['dashboard-stats'],
+      [cacheKey],
       [CacheTags.DASHBOARD],
       60
     );

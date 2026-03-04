@@ -1,4 +1,5 @@
 import { adminClient } from '@/lib/supabase/admin';
+import { isDemoReviewer } from '@/lib/auth/admin-guard';
 import { getAdminT, getDateLocale } from '@/lib/i18n/admin';
 import { Mail, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -11,12 +12,15 @@ export default async function EmailLogPage({
   const { locale } = await params;
   const t = getAdminT(locale);
   const dateLocale = getDateLocale(locale);
+  const isDemo = await isDemoReviewer();
 
-  const { data: emails } = await adminClient
+  let emailQuery = adminClient
     .from('email_log')
     .select('*, profiles(id, full_name)')
     .order('created_at', { ascending: false })
     .limit(200);
+  if (isDemo) emailQuery = emailQuery.eq('is_demo', true);
+  const { data: emails } = await emailQuery;
 
   const allEmails = emails ?? [];
 

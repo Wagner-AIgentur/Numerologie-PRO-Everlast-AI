@@ -1,4 +1,5 @@
 import { adminClient } from '@/lib/supabase/admin';
+import { isDemoReviewer } from '@/lib/auth/admin-guard';
 import { getAdminT, getDateLocale } from '@/lib/i18n/admin';
 import { Calendar, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import RecordingAttachForm from './RecordingAttachForm';
@@ -14,11 +15,14 @@ export default async function AdminSitzungenPage({
   const { filter } = await searchParams;
   const t = getAdminT(locale);
   const dateLocale = getDateLocale(locale);
+  const isDemo = await isDemoReviewer();
 
-  const { data: sessions } = await adminClient
+  let sessionsQuery = adminClient
     .from('sessions')
     .select('*, profiles(full_name, email)')
     .order('created_at', { ascending: false });
+  if (isDemo) sessionsQuery = sessionsQuery.eq('is_demo', true);
+  const { data: sessions } = await sessionsQuery;
 
   const statusConfig: Record<string, { label: string; color: string; icon: typeof Clock }> = {
     scheduled: { label: t.statusScheduled, color: 'bg-yellow-500/10 text-yellow-400', icon: Clock },

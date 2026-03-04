@@ -187,9 +187,9 @@ Nichts erfinden. Ehrlich sagen wenn du unsicher bist.`;
  */
 export function loadSubagentPrompt(type: SubagentType): string | null {
   const fileMap: Record<SubagentType, string> = {
-    paketberatung: "01-paketberatung.md",
-    faq: "02-faq-allgemein.md",
-    account: "03-account-support.md",
+    paketberatung: "02-paketberatung.md",
+    faq: "03-faq-allgemein.md",
+    account: "04-account-support.md",
   };
 
   const promptPath = path.join(
@@ -389,7 +389,7 @@ function buildBookConsultationTool(baseUrl: string) {
 
 function buildTransferToNumberTool() {
   const handoverPhone =
-    process.env.HANDOVER_PHONE_NUMBER || "+4915151668273";
+    process.env.HANDOVER_PHONE_NUMBER || "+4915118743759";
 
   return {
     type: "system" as const,
@@ -642,14 +642,14 @@ export function buildMainAgentConfig(config: ConversationConfig) {
         spelling_patience: "auto",
       },
       tts: {
-        model_id: "eleven_turbo_v2_5",
+        model_id: "eleven_flash_v2_5",
       },
       agent: {
         first_message: config.greetings.de,
         language: "de",
         prompt: {
           prompt: buildMainAgentPrompt(config),
-          llm: "gpt-4o-mini",
+          llm: "gpt-4.1-mini",
           tool_ids: [],
           tools: getToolsForAgent("main", baseUrl),
         },
@@ -712,14 +712,14 @@ export function buildSubagentConfig(
         spelling_patience: "auto",
       },
       tts: {
-        model_id: "eleven_turbo_v2_5",
+        model_id: "eleven_flash_v2_5",
       },
       agent: {
         first_message: firstMessages[type].de,
         language: "de",
         prompt: {
           prompt: prompt || `Subagent prompt for ${type} not found. Check elevenlabs/prompts/ directory.`,
-          llm: "gpt-4o-mini",
+          llm: "gpt-4.1-mini",
           tool_ids: [],
           tools: getToolsForAgent(type, baseUrl),
         },

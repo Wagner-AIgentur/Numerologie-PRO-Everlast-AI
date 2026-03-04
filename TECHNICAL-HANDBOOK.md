@@ -76,7 +76,7 @@
 ┌──────────────────────────────────────────────────────────────────────────┐
 │                        EXTERNE SERVICES                                   │
 │                                                                          │
-│  ElevenLabs   → Voice Agent (WebSocket, GPT-4o mini, TTS Turbo v2.5)   │
+│  ElevenLabs   → Voice Agent (WebSocket, GPT-4.1 mini, TTS Flash v2.5)  │
 │  OpenRouter   → Content Studio (Claude 4.6 Sonnet, Gemini, various)   │
 │  Stripe       → Checkout, Webhooks, Coupons, Promotion Codes            │
 │  Cal.com      → Terminbuchung (REST API + Embed Widget)                 │
@@ -136,22 +136,26 @@ Frontend /checkout?packageKey=pdf_analyse&birthdate=15.03.1990
 
 ### Architektur
 
-Lisa ist ein Multi-Agent-System auf ElevenLabs Conversational AI. Der Main Agent klassifiziert das Anliegen und routet zu spezialisierten Sub-Agents.
+Lisa ist ein Workflow-basiertes System auf ElevenLabs Conversational AI. Ein Agent (`Numerologie PRO`, LLM: `gpt-4.1-mini`, TTS: `eleven_flash_v2_5`) mit integriertem Workflow: Main Agent → Qualifier → 4 Sub-Agent Nodes + Telefon-Weiterleitung.
 
 ```
 Anrufer → ElevenLabs WebSocket (Signed URL)
                     │
                Lisa (Main Agent)
-               Klassifiziert Anliegen
+               Begruesst Anrufer
                     │
-    ┌───────────────┼───────────────┐
-    ▼               ▼               ▼
-Paketberatung    FAQ Agent    Account Support
-(Verkauf)        (Allg.)     (Tech. Hilfe)
-    │                               │
-    ▼                               ▼
-Cal.com Booking             Email-Weiterleitung
-Lead Scoring                Schritt-fuer-Schritt
+               Qualifier (Node)
+               Klassifiziert Anliegen (bilingual DE+RU)
+                    │
+    ┌──────┬────────┼────────┬────────────┐
+    ▼      ▼        ▼        ▼            ▼
+Paket-   FAQ     Account/  Notfall/    Telefon
+berat.   Agent   Support   Eskalation  +4915118743759
+(Verkauf)(Allg.) (Tech.)   (Beruhigt)  (conference)
+    │
+    ▼
+Cal.com Booking
+Lead Scoring
 ```
 
 ### Endpoints

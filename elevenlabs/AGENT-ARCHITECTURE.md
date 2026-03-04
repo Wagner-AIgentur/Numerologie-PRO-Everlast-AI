@@ -1,7 +1,8 @@
-# Voice Agent: Komplette Multi-Agent Architektur
+# Voice Agent: Komplette Workflow-Architektur
 
-> Alles was du brauchst um den Voice Agent aufzubauen.
-> Prompts, Conditions, Tools, Knowledge Base — alles an einem Ort.
+> Aktuelle Architektur auf ElevenLabs (Stand: Maerz 2026).
+> Agent mit integriertem Workflow: Main Agent + Qualifier + 4 Sub-Agent Nodes + Telefon-Weiterleitung.
+> Alle Prompt-Dateien, Conditions, Tools und Node IDs an einem Ort.
 
 ---
 
@@ -9,338 +10,173 @@
 
 ```
                     ┌─────────────────────┐
-                    │   ANRUFER (Telefon)  │
+                    │   ANRUFER (Telefon   │
+                    │   oder Web-Widget)   │
                     └─────────┬───────────┘
                               │
                               ▼
-                 ┌────────────────────────┐
-                 │   MAIN AGENT (Lisa)    │
-                 │   = System Prompt      │
-                 │   + First Message      │
-                 │                        │
-                 │   Begruesst, fuehrt    │
-                 │   das Gespraech,       │
-                 │   klassifiziert und    │
-                 │   leitet weiter        │
-                 └──┬──────┬──────┬──┬───┘
-                    │      │      │  │
-       Forward:     │      │      │  │  Forward:
-       PAKETBERATUNG│      │      │  │  NOTFALL
-                    │      │      │  │
-       ┌────────────┘      │      │  └──────────────┐
-       ▼                   ▼      ▼                  ▼
-┌────────────┐ ┌────────────┐ ┌────────────┐  ┌───────────┐
-│ SUB-AGENT 2│ │ SUB-AGENT 3│ │ SUB-AGENT 4│  │ TELEFON   │
-│ Paketberat.│ │ FAQ/Allgem.│ │ Account/   │  │ WEITERLEI │
-│            │ │            │ │ Support    │  │ TUNG      │
-│ Pakete     │ │ Psycho-    │ │ Login      │  │           │
-│ Preise     │ │ matrix     │ │ Zahlung    │  │ +49 XXX  │
-│ Buchung    │ │ Swetlana   │ │ Dashboard  │  │ XXXXXXX   │
-└─────┬──────┘ └─────┬──────┘ └─────┬──────┘  │ (Admin)   │
-      │              │              │          └───────────┘
-      └──────────────┼──────────────┘
-                     │
-           Backward: │ Themenwechsel ODER Eskalation
-                     ▼
-              MAIN AGENT (neu klassifizieren)
+              ┌───────────────────────────────┐
+              │    MAIN AGENT (Lisa)          │
+              │    Agent: Numerologie PRO     │
+              │    ID: agent_2901kjnddvvw...  │
+              │    LLM: gpt-4.1-mini         │
+              │    TTS: eleven_flash_v2_5    │
+              │                               │
+              │    Begruesst, fuehrt das      │
+              │    Gespraech, klassifiziert   │
+              └─────────────┬─────────────────┘
+                            │
+                            ▼
+              ┌───────────────────────────────┐
+              │    QUALIFIER (Node)           │
+              │    node_01kjrbg9g3f22s3s...   │
+              │    LLM: gpt-4.1-mini         │
+              │    Bilingual DE + RU          │
+              │                               │
+              │    Analysiert und             │
+              │    klassifiziert in           │
+              │    4 Kategorien               │
+              └──┬──────┬──────┬──────┬──────┘
+                 │      │      │      │
+    PAKETBERATUNG│  FAQ │  SUP.│      │ NOTFALL
+                 │      │      │      │
+       ┌─────────┘      │      │      └──────────┐
+       ▼                ▼      ▼                  ▼
+┌────────────┐ ┌────────────┐ ┌────────────┐ ┌───────────┐
+│ PAKETBERAT.│ │    FAQ     │ │  ACCOUNT/  │ │ NOTFALL/  │
+│            │ │            │ │  SUPPORT   │ │ ESKALAT.  │
+│ node_01kjr │ │ node_01kjr │ │ node_01kjr │ │ node_01kjr│
+│ cbwhneh... │ │ cjyjteh... │ │ c65yyf2... │ │ g3wh7eh...│
+│            │ │            │ │            │ │           │
+│ Pakete     │ │ Psycho-    │ │ Login      │ │ Beruhigt  │
+│ Preise     │ │ matrix     │ │ Zahlung    │ │ und leitet│
+│ Buchung    │ │ Swetlana   │ │ Dashboard  │ │ weiter    │
+│ Einwaende  │ │ Rechner    │ │ Stornierung│ │           │
+└─────┬──────┘ └─────┬──────┘ └─────┬──────┘ └─────┬─────┘
+      │              │              │               │
+      └──────────────┼──────────────┘               │
+                     │                              ▼
+           Backward: │ Themenwechsel        ┌───────────────┐
+                     ▼                      │   TELEFON     │
+              QUALIFIER                     │ +4915118743759│
+              (neu klassifizieren)          │ (conference)  │
+                                            │ node_01kjrg4k.│
+                                            └───────────────┘
 ```
 
 ---
 
-## Einstellungen (fuer JEDEN Agent gleich)
+## Einstellungen (Agent-Level)
 
 | Setting | Wert |
 |---------|------|
-| Audio Saving | **AUS** (DSGVO Plan A) |
-| Transcript Retention | 90 Tage |
+| Agent Name | `Numerologie PRO` |
+| Agent ID | `agent_2901kjnddvvwfxpbeph5yxzgpfrm` |
+| LLM | `gpt-4.1-mini` |
+| TTS Model | `eleven_flash_v2_5` |
+| Voice ID | `v3V1d2rk6528UrLKRuy8` |
 | Text Normalization | `elevenlabs` |
-| TTS Model | `eleven_turbo_v2_5` |
+| TTS Speed | `1.02` |
+| TTS Stability | `0.5` |
+| TTS Similarity Boost | `0.8` |
+| ASR Provider | `scribe_realtime` (high quality) |
 | Default Language | `de` |
 | Language Presets | DE + RU |
+| Turn Timeout | 10 Sekunden |
+| Silence End Call | 30 Sekunden |
+| Soft Timeout | 5 Sekunden ("Bist du noch da?") |
+| Turn Eagerness | `patient` |
+| Max Duration | 600 Sekunden (10 Minuten) |
 
 ---
 
-## Agent-Uebersicht
+## Node-Uebersicht
 
-| # | Agent | Typ | Datei | Aufgabe |
-|---|-------|-----|-------|---------|
-| 0 | Lisa (Main) | System Prompt | `00-main-agent.md` | Begruessung + Gespraechsfuehrung + Klassifizierung |
-| ~~1~~ | ~~Qualifier~~ | ~~Sub-Agent~~ | ~~`01-qualifier.md`~~ | **DEPRECATED** — integriert in `00-main-agent.md` |
-| 2 | Paketberatung | Sub-Agent | `02-paketberatung.md` | Pakete, Preise, Empfehlungen, Buchung |
-| 3 | FAQ/Allgemein | Sub-Agent | `03-faq-allgemein.md` | Psychomatrix, Swetlana, Rechner, FAQ |
-| 4 | Account/Support | Sub-Agent | `04-account-support.md` | Login, Zahlung, Dashboard, Stornierung |
+| # | Node | Typ | Node ID | Datei | LLM | Aufgabe |
+|---|------|-----|---------|-------|-----|---------|
+| 0 | Lisa (Main) | Agent System Prompt | — | `00-main-agent.md` | gpt-4.1-mini | Begruessung + Gespraechsfuehrung |
+| 1 | Qualifier | override_agent | `node_01kjrbg9g3f22s3sjttgszzzav` | `01-qualifier.md` | gpt-4.1-mini | Klassifizierung in 4 Kategorien (bilingual) |
+| 2 | Paketberatung | override_agent | `node_01kjrcbwhneh3sn2bd4pg5d8ar` | `02-paketberatung.md` | inherit | Pakete, Preise, Empfehlungen, Buchung |
+| 3 | FAQ/Allgemein | override_agent | `node_01kjrcjyjteh3sn2brrk37aqxz` | `03-faq-allgemein.md` | inherit | Psychomatrix, Swetlana, Rechner, FAQ |
+| 4 | Account/Support | override_agent | `node_01kjrc65yyf22s3sk88as4mnhz` | `04-account-support.md` | inherit | Login, Zahlung, Dashboard, Stornierung |
+| 5 | Notfall/Eskalation | override_agent | `node_01kjrg3wh7eh3sn2cb8290zeet` | `05-notfall-eskalation.md` | inherit | Beruhigt und leitet an Telefon weiter |
+| 6 | Telefon | phone_number | `node_01kjrg4kbeeh3sn2cr6m4690kn` | — | — | Weiterleitung an +4915118743759 (conference) |
+
+---
+
+## First Messages
+
+| Kontext | Text | Form |
+|---------|------|------|
+| Default (kein Preset) | Hallo und willkommen bei Numerologie PRO! Mein Name ist Lisa, ich bin die digitale Assistentin von Swetlana. Wie kann ich dir heute helfen? | Du-Form |
+| DE Preset | Hallo und willkommen bei Numerologie PRO! Hier ist Lisa, Ihre KI-Assistentin. Schoen, dass Sie anrufen! Kurzer Hinweis: Dieses Gespraech kann zu Qualitaetszwecken aufgezeichnet werden. Sind Sie damit einverstanden, oder moechten Sie lieber ohne Aufzeichnung sprechen? | Sie-Form |
+| RU Preset | Здравствуйте, добро пожаловать в Numerologie PRO! Меня зовут Лиза, я ваш ИИ-ассистент. Рада, что вы позвонили! Небольшое уточнение: этот разговор может быть записан в целях контроля качества. Вы согласны, или предпочитаете общаться без записи? | Вы-Form |
 
 ---
 
 ## Alle Conditions (Routing)
 
-### Forward Conditions
+### Forward Conditions (Qualifier → Sub-Agent Nodes)
 
-| # | Von | Nach | Condition Name | Trigger / Beschreibung |
-|---|-----|------|---------------|----------------------|
-| F1 | Main Agent | Paketberatung | `route_paketberatung` | Preis, Paket, buchen, Empfehlung, Kosten, Beziehungskarte, Lebenskarte, Jahresprognose, Geldkanal, Persoenliches Wachstum, Bestimmung, Mein Kind, PDF-Analyse, Erstgespraech, Budget |
-| F2 | Main Agent | FAQ | `route_faq` | was ist, wie funktioniert, wer ist, Psychomatrix, Numerologie, Pythagoras, Rechner, Swetlana, wissenschaftlich, Kompatibilitaet, Telegram Bot, erklaeren, informieren |
-| F3 | Main Agent | Account/Support | `route_support` | Login, Passwort, Konto, Zahlung, Stornierung, Dashboard, PDF herunterladen, Fehler, funktioniert nicht, Empfehlungscode, Support, Hilfe |
-| F4 | Main Agent | **Telefon: +49 XXX XXXXXXX** | `route_eskalation` | Mensch, echte Person, Vorgesetzter, Manager, Beschwerde, Anwalt, Klage, unzufrieden, Frechheit, sofort jemand, will nicht mit KI, verbinde mich, Notfall, dringend, inakzeptabel |
+| # | Von | Nach | Condition | Trigger (DE + RU) |
+|---|-----|------|-----------|-------------------|
+| F1 | Qualifier | Paketberatung | `route_paketberatung` | Preis, Paket, buchen, Termin, Empfehlung, Beziehungskarte, Lebenskarte, Jahresprognose, Geldkanal, Bestimmung, Mein Kind, PDF-Analyse, Erstgespraech, Budget / цена, стоимость, пакет, записаться, консультация, рекомендация, бюджет |
+| F2 | Qualifier | FAQ | `route_faq` | was ist, wie funktioniert, wer ist, Psychomatrix, Numerologie, Rechner, Swetlana, erklaeren, informieren, Telegram Bot / что такое, как работает, кто такая, калькулятор, нумерология, опыт, научно |
+| F3 | Qualifier | Account/Support | `route_support` | Login, Passwort, Zahlung, Stornierung, Dashboard, PDF herunterladen, Fehler, funktioniert nicht, Support, Hilfe / вход, пароль, оплата, отмена, ошибка, не работает, поддержка |
+| F4 | Qualifier | Notfall/Eskalation → Telefon | `route_eskalation` | Mensch, echte Person, Beschwerde, Anwalt, unzufrieden, sofort jemand, will nicht mit KI, Notfall, dringend / настоящий человек, менеджер, жалоба, адвокат, недоволен, срочно, немедленно |
 
-### Backward Conditions
-
-| # | Von | Nach | Condition Name | Trigger / Beschreibung |
-|---|-----|------|---------------|----------------------|
-| B1 | Paketberatung | Main Agent | `themenwechsel` | Anrufer wechselt das Thema |
-| B2 | FAQ | Main Agent | `themenwechsel` | Anrufer wechselt das Thema |
-| B3 | Account/Support | Main Agent | `themenwechsel` | Anrufer wechselt das Thema |
-| B4 | Paketberatung | Main Agent | `eskalation` | Anrufer verlangt Menschen, ist veraergert, droht |
-| B5 | FAQ | Main Agent | `eskalation` | Anrufer verlangt Menschen, ist veraergert, droht |
-| B6 | Account/Support | Main Agent | `eskalation` | Anrufer verlangt Menschen, ist veraergert, droht |
-
-> **Eskalations-Pfad:** Sub-Agent erkennt Eskalation → Backward zum Main Agent → Main Agent erkennt NOTFALL → Forward F4 → Telefon-Weiterleitung an **+49 XXX XXXXXXX** (IT Admin)
-
----
-
-# ═══════════════════════════════════════════════
-# MAIN AGENT: Lisa (System Prompt)
-# ═══════════════════════════════════════════════
-
-**Name:** `Numerologie PRO - Lisa (Main)`
-**Typ:** System Prompt (Haupt-Agent)
-**Datei:** `prompts/00-main-agent.md`
-
-### First Message (DE)
-```
-Hallo! Hier ist Lisa, deine KI-Assistentin bei Numerologie PRO. Wie kann ich dir helfen?
-```
-
-### First Message (RU)
-```
-Привет! Это Лиза, ИИ-ассистент Numerologie PRO. Чем могу помочь?
-```
-
-### System Prompt
-
-> Siehe `prompts/00-main-agent.md` fuer den vollstaendigen, aktuellen Prompt.
-> Kernpunkte: KI-Sprachassistentin, Du-Form, 4 Kategorien (Paketberatung, FAQ, Support, Eskalation), max. 2 Saetze pro Antwort.
-
-### Tools (Main Agent)
-
-| Tool | Vorhanden |
-|------|-----------|
-| end_call_summary | JA |
-| search_knowledge | NEIN |
-| qualify_lead | NEIN |
-| book_consultation | NEIN |
-
-### Knowledge Base
-**Keine.** Der Main Agent fuehrt nur das Gespraech, klassifiziert und leitet weiter.
-
-### Forward Conditions → Sub-Agents
-
-Der Main Agent klassifiziert das Anliegen direkt in eine von 4 Kategorien und leitet weiter (siehe Routing-Tabelle oben).
-
----
-
-# ═══════════════════════════════════════════════
-# ~~SUB-AGENT 1: Qualifier (Klassifizierung)~~ — DEPRECATED
-# ═══════════════════════════════════════════════
-
-> **DEPRECATED (seit Commit 8e2755c)**
-> Die Qualifier-Logik wurde in `00-main-agent.md` integriert.
-> Der Main Agent klassifiziert jetzt direkt in 4 Kategorien und leitet weiter.
-> Siehe `prompts/01-qualifier.md` fuer die alte Referenz.
-
----
-
-# ═══════════════════════════════════════════════
-# SUB-AGENT 2: Paketberatung
-# ═══════════════════════════════════════════════
-
-**Name:** `Numerologie PRO - Paketberatung`
-**Typ:** Sub-Agent
-**Datei:** `prompts/02-paketberatung.md`
-
-### System Prompt
-
-> Siehe `prompts/02-paketberatung.md` fuer den vollstaendigen, aktuellen Prompt.
-> Kernpunkte: Du-Form, 11 Pakete mit TTS-optimierten Preisen, 5-Schritt-Buchungsablauf, Einwandbehandlung (4 Szenarien).
-
-### Tools (Paketberatung)
-
-| Tool | Webhook URL | Pflichtfelder |
-|------|-------------|---------------|
-| check_availability | `/api/voice-agent/tools/check-availability` | language (optional) |
-| search_knowledge | `/api/voice-agent/tools/knowledge` | query |
-| qualify_lead | `/api/voice-agent/tools/qualify` | name |
-| book_consultation | `/api/voice-agent/tools/book-demo` | lead_name, lead_email, lead_phone, lead_birthdate, lead_communication_preference |
-| end_call_summary | `/api/voice-agent/tools/summary` | summary |
-
-### Knowledge Base (Paketberatung)
-
-**Im Prompt eingebettet (Fallback):**
-- Alle 11 Pakete mit Preisen (TTS-optimiert), Dauer, Beschreibung
-- Empfehlungslogik (welches Paket fuer welches Thema)
-- Einwandbehandlung (4 Szenarien: teuer, unsicher, keine Zeit, skeptisch)
-
-**Via search_knowledge Tool (Supabase RAG):**
-- Kategorie `package` — Detaillierte Paketbeschreibungen
-- Kategorie `recommendation` — Empfehlungsregeln
-- Kategorie `objection` — Einwandbehandlung
-
-### Backward Condition → Main Agent
-
-**Name:** `themenwechsel`
-**Beschreibung:** Der Anrufer stellt eine Frage die nicht zu Paketen/Preisen/Buchung gehoert (z.B. Login-Problem oder allgemeine Frage).
-
----
-
-# ═══════════════════════════════════════════════
-# SUB-AGENT 3: FAQ und Allgemein
-# ═══════════════════════════════════════════════
-
-**Name:** `Numerologie PRO - FAQ`
-**Typ:** Sub-Agent
-**Datei:** `prompts/03-faq-allgemein.md`
-
-### System Prompt
-
-> Siehe `prompts/03-faq-allgemein.md` fuer den vollstaendigen, aktuellen Prompt.
-> Kernpunkte: Du-Form, Psychomatrix-Wissen, Swetlana-Bio, 5 FAQ, Rechner-Links, Preisredirect zur Paketberatung.
-
-### Tools (FAQ)
-
-| Tool | Webhook URL | Pflichtfelder |
-|------|-------------|---------------|
-| search_knowledge | `/api/voice-agent/tools/knowledge` | query |
-| book_consultation | `/api/voice-agent/tools/book-demo` | lead_name, lead_email |
-| end_call_summary | `/api/voice-agent/tools/summary` | summary |
-
-### Knowledge Base (FAQ)
-
-**Im Prompt eingebettet (Fallback):**
-- Psychomatrix (9 Positionen, 3 Zeilen, 3 Spalten, 2 Diagonalen)
-- Swetlana Wagner (10+ Jahre, 500+ Beratungen, 11 Zertifikate)
-- Beratungsablauf (Zoom/Telegram, 90-120 Min)
-- Kostenloser Rechner + Kompatibilitaetsrechner
-- Telegram Bot
-- 5 haeufige Fragen mit Antworten
-
-**Via search_knowledge Tool (Supabase RAG):**
-- Kategorie `faq` — Alle FAQ-Eintraege
-- Kategorie `about` — Ueber Swetlana und Numerologie PRO
-- Kategorie `service` — Beratungsablauf und Angebot
-
-### Backward Condition → Main Agent
-
-**Name:** `themenwechsel`
-**Beschreibung:** Der Anrufer stellt eine Frage die nicht zu FAQ/Numerologie/allgemeinen Infos gehoert (z.B. will Paket buchen oder hat Login-Problem).
-
----
-
-# ═══════════════════════════════════════════════
-# SUB-AGENT 4: Account und Support
-# ═══════════════════════════════════════════════
-
-**Name:** `Numerologie PRO - Support`
-**Typ:** Sub-Agent
-**Datei:** `prompts/04-account-support.md`
-
-### System Prompt
-
-> Siehe `prompts/04-account-support.md` fuer den vollstaendigen, aktuellen Prompt.
-> Kernpunkte: Du-Form, Login/Dashboard/Zahlung/Stornierung/Empfehlungsprogramm, Eskalation an info at numerologie-pro.com.
-
-### Tools (Account/Support)
-
-| Tool | Webhook URL | Pflichtfelder |
-|------|-------------|---------------|
-| search_knowledge | `/api/voice-agent/tools/knowledge` | query |
-| end_call_summary | `/api/voice-agent/tools/summary` | summary |
-
-### Knowledge Base (Account/Support)
-
-**Im Prompt eingebettet (Fallback):**
-- Registrierung, Login-Probleme, Passwort vergessen
-- Dashboard-Funktionen
-- Zahlungsmethoden (Stripe)
-- Stornierung und Rueckerstattung
-- Empfehlungsprogramm (15%)
-- Telegram Bot
-- Kontaktdaten
-
-**Via search_knowledge Tool (Supabase RAG):**
-- Kategorie `account` — Konto und Login
-- Kategorie `payment` — Zahlung und Stornierung
-- Kategorie `contact` — Kontaktinformationen
-
-### Backward Condition → Main Agent
-
-**Name:** `themenwechsel`
-**Beschreibung:** Der Anrufer stellt eine Frage die nicht zu Account/Support gehoert (z.B. will Paket buchen oder hat allgemeine Frage).
-
----
-
-# ═══════════════════════════════════════════════
-# ZUSAMMENFASSUNG
-# ═══════════════════════════════════════════════
-
-## Komplette Routing-Tabelle
-
-### Forward (vorwaerts)
+### Backward Conditions (Sub-Agent Nodes → Qualifier)
 
 | # | Von | Nach | Condition | Trigger |
 |---|-----|------|-----------|---------|
-| F1 | Main Agent | Paketberatung | `route_paketberatung` | Preis/Paket/Buchung/Empfehlung |
-| F2 | Main Agent | FAQ | `route_faq` | Psychomatrix/Swetlana/Rechner/Info |
-| F3 | Main Agent | Account/Support | `route_support` | Login/Zahlung/Dashboard/Problem |
-| F4 | Main Agent | **Tel: +49 XXX XXXXXXX** | `route_eskalation` | Mensch/Beschwerde/Anwalt/Notfall |
+| B1 | Paketberatung | Qualifier | `themenwechsel` | Anrufer wechselt das Thema |
+| B2 | FAQ | Qualifier | `themenwechsel` | Anrufer wechselt das Thema |
+| B3 | Account/Support | Qualifier | `themenwechsel` | Anrufer wechselt das Thema |
+| B4 | Paketberatung | Qualifier | `eskalation` | Anrufer verlangt Menschen, ist veraergert |
+| B5 | FAQ | Qualifier | `eskalation` | Anrufer verlangt Menschen, ist veraergert |
+| B6 | Account/Support | Qualifier | `eskalation` | Anrufer verlangt Menschen, ist veraergert |
 
-### Backward (zurueck)
+> **Eskalations-Pfad:** Sub-Agent erkennt Eskalation → Backward zum Qualifier → Qualifier erkennt NOTFALL → Forward F4 → Notfall-Node → Telefon-Weiterleitung an +4915118743759
 
-| # | Von | Nach | Condition | Trigger |
-|---|-----|------|-----------|---------|
-| B1 | Paketberatung | Main Agent | `themenwechsel` | Anrufer wechselt Thema |
-| B2 | FAQ | Main Agent | `themenwechsel` | Anrufer wechselt Thema |
-| B3 | Account/Support | Main Agent | `themenwechsel` | Anrufer wechselt Thema |
-| B4 | Paketberatung | Main Agent | `eskalation` | Anrufer verlangt Menschen/droht |
-| B5 | FAQ | Main Agent | `eskalation` | Anrufer verlangt Menschen/droht |
-| B6 | Account/Support | Main Agent | `eskalation` | Anrufer verlangt Menschen/droht |
-
-### Eskalations-Pfad
-
-```
-Sub-Agent erkennt Eskalation
-  → Backward zum Main Agent
-    → Main Agent erkennt NOTFALL
-      → Forward F4: Telefon-Weiterleitung an +49 XXX XXXXXXX (IT Admin)
-```
+---
 
 ## Tool-Verteilung
 
-| Tool | Main | Paketberatung | FAQ | Support |
-|------|------|---------------|-----|---------|
-| end_call_summary | JA | JA | JA | JA |
-| search_knowledge | — | JA | JA | JA |
-| check_availability | — | JA | — | — |
-| qualify_lead | — | JA | — | — |
-| book_consultation | — | JA | JA | — |
+Alle 5 Tools sind dem Main Agent zugewiesen. Sub-Agent Nodes erben die Tools.
+
+| Tool | Main | Qualifier | Paketberatung | FAQ | Support | Notfall |
+|------|------|-----------|---------------|-----|---------|---------|
+| end_call_summary | JA | — | JA | JA | JA | — |
+| search_knowledge | JA | — | JA | JA | JA | — |
+| check_availability | JA | — | JA | JA | — | — |
+| qualify_lead | JA | — | JA | — | — | — |
+| book_consultation | JA | — | JA | JA | — | — |
+
+---
 
 ## Webhook-URLs (Base: numerologie-pro.com)
 
 | Tool | Endpoint | Method |
 |------|----------|--------|
-| check_availability | `/api/voice-agent/tools/check-availability` | POST |
 | search_knowledge | `/api/voice-agent/tools/knowledge` | POST |
-| qualify_lead | `/api/voice-agent/tools/qualify` | POST |
-| book_consultation | `/api/voice-agent/tools/book-demo` | POST |
 | end_call_summary | `/api/voice-agent/tools/summary` | POST |
+| qualify_lead | `/api/voice-agent/tools/qualify` | POST |
+| check_availability | `/api/voice-agent/tools/check-availability` | POST |
+| book_consultation | `/api/voice-agent/tools/book-demo` | POST |
 
-## DSGVO Checkliste
+---
 
-| # | Aktion | Status |
+## DSGVO Hinweise
+
+| # | Status | Detail |
 |---|--------|--------|
-| 1 | Audio Saving AUS fuer alle Agents | [ ] |
-| 2 | Retention auf 90 Tage | [ ] |
-| 3 | Text Normalization = elevenlabs | [ ] |
-| 4 | DPA mit ElevenLabs unterzeichnet | [ ] |
-| 5 | Datenschutzerklaerung aktualisiert | [ ] |
-| 6 | KI-Kennzeichnung in First Message | [ ] |
-| 7 | recording_consent immer false | [ ] |
+| 1 | Recording-Consent in First Message | DE + RU Presets fragen nach Einverstaendnis |
+| 2 | Text Normalization = elevenlabs | Konfiguriert |
+| 3 | recording_consent Feld | Im end_call_summary Tool (immer false) |
+| 4 | KI-Kennzeichnung | "KI-Assistentin" / "digitale Assistentin" / "ИИ-ассистент" |
+
+---
+
+## Hinweis: Workflow Edges
+
+Stand Maerz 2026 sind die Workflow-Edges (Verbindungen zwischen Nodes) ueber den ElevenLabs Workflow Builder UI konfiguriert. Die API gibt 0 Edges zurueck — das Routing wird intern vom Workflow Builder verwaltet.

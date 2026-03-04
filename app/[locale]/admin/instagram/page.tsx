@@ -1,4 +1,5 @@
 import { adminClient } from '@/lib/supabase/admin';
+import { isDemoReviewer } from '@/lib/auth/admin-guard';
 import InstagramShell from '@/components/admin/instagram/InstagramShell';
 
 export default async function InstagramPage({
@@ -7,13 +8,16 @@ export default async function InstagramPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  const isDemo = await isDemoReviewer();
 
-  // Fetch recent messages with profile joins
-  const { data: messages } = await adminClient
-    .from('instagram_messages')
-    .select('*, profiles:profile_id(id, full_name, email, avatar_url)')
-    .order('created_at', { ascending: false })
-    .range(0, 99);
+  // Demo reviewer sees empty state (no demo data for Instagram)
+  const { data: messages } = isDemo
+    ? { data: [] as any[] }
+    : await adminClient
+        .from('instagram_messages')
+        .select('*, profiles:profile_id(id, full_name, email, avatar_url)')
+        .order('created_at', { ascending: false })
+        .range(0, 99);
 
   // Group into conversations
   const convMap = new Map<

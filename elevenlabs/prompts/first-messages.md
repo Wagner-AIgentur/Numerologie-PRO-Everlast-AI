@@ -1,58 +1,54 @@
 # First Messages (Begruessungstexte)
 
-> Diese Texte in ElevenLabs unter "First Message" fuer jeden Agent eintragen.
-> DSGVO Plan A: Audio Saving ist AUS → kein Recording-Consent noetig.
-> KI-Kennzeichnung (EU AI Act Art. 50 Abs. 4) in der Begruessung.
-> Du-Form fuer natuerlichen Ton.
+> Diese Texte sind aktuell auf ElevenLabs konfiguriert.
+> Agent: `Numerologie PRO` (agent_2901kjnddvvwfxpbeph5yxzgpfrm)
+>
+> **Hinweis:** Die Language Presets (DE/RU) enthalten einen Recording-Consent-Hinweis.
+> Der Default First Message (ohne Preset) nutzt die Du-Form ohne Consent-Abfrage.
 
 ---
 
-## Main Agent: First Message (DE)
+## Default First Message (ohne Language Preset)
 
 ```
-Hallo! Hier ist Lisa, deine KI-Assistentin bei Numerologie PRO. Wie kann ich dir helfen?
-```
-
-## Main Agent: First Message (RU)
-
-```
-Привет! Это Лиза, ИИ-ассистент Numerologie PRO. Чем могу помочь?
+Hallo und willkommen bei Numerologie PRO! Mein Name ist Lisa, ich bin die digitale Assistentin von Swetlana. Wie kann ich dir heute helfen?
 ```
 
 ---
 
-## Subagent Paketberatung: First Message (DE)
+## Language Preset: Deutsch (DE)
 
 ```
-Ich helfe dir gerne das passende Paket zu finden. Was beschaeftigt dich gerade am meisten?
+Hallo und willkommen bei Numerologie PRO! Hier ist Lisa,
+Ihre KI-Assistentin. Schön, dass Sie anrufen!
+Kurzer Hinweis: Dieses Gespräch kann zu Qualitätszwecken aufgezeichnet werden.
+Sind Sie damit einverstanden, oder möchten Sie lieber ohne Aufzeichnung sprechen?
 ```
 
-## Subagent Paketberatung: First Message (RU)
+## Language Preset: Russisch (RU)
 
 ```
-С удовольствием помогу подобрать подходящий пакет. Что тебя сейчас больше всего беспокоит?
+Здравствуйте, добро пожаловать в Numerologie PRO! Меня зовут Лиза,
+я ваш ИИ-ассистент. Рада, что вы позвонили!
+Небольшое уточнение: этот разговор может быть записан в целях контроля качества.
+Вы согласны, или предпочитаете общаться без записи?
 ```
 
-## Subagent FAQ: First Message (DE)
+---
 
-```
-Gerne beantworte ich deine Fragen. Was moechtest du wissen?
-```
+## Soft Timeout Messages (nach 5 Sekunden Stille)
 
-## Subagent FAQ: First Message (RU)
-
+**DE:**
 ```
-С удовольствием отвечу на твои вопросы. Что бы ты хотел узнать?
+Bist du noch da?
 ```
 
-## Subagent Account: First Message (DE)
-
+**DE Preset Override:**
 ```
-Ich helfe dir gerne weiter. Was genau ist das Problem?
+Hhmmmm...ja.
 ```
 
-## Subagent Account: First Message (RU)
-
+**RU Preset Override:**
 ```
-С удовольствием помогу. В чём именно проблема?
+Хмммм...да.
 ```

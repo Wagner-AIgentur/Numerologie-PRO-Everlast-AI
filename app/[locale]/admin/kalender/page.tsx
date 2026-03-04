@@ -1,4 +1,5 @@
 import { getAdminT } from '@/lib/i18n/admin';
+import { isDemoReviewer } from '@/lib/auth/admin-guard';
 import { CalendarDays, ExternalLink, Settings } from 'lucide-react';
 import { parseICS } from '@/lib/calendar/ics-parser';
 import { adminClient } from '@/lib/supabase/admin';
@@ -50,14 +51,16 @@ async function fetchCalendarEvents(): Promise<CalendarItem[] | null> {
 }
 
 /* ── Supabase sessions → CalendarItem[] ── */
-async function fetchSessions(): Promise<CalendarItem[]> {
+async function fetchSessions(isDemo: boolean): Promise<CalendarItem[]> {
   try {
-    const { data: sessions } = await adminClient
+    let q = adminClient
       .from('sessions')
       .select('id, title, session_type, scheduled_at, status, package_type, duration_minutes, platform, meeting_link, meeting_url, profiles(full_name, email)')
       .not('scheduled_at', 'is', null)
       .in('status', ['scheduled', 'confirmed', 'completed', 'rescheduled'])
       .order('scheduled_at', { ascending: true });
+    if (isDemo) q = q.eq('is_demo', true);
+    const { data: sessions } = await q;
 
     if (!sessions) return [];
 
@@ -94,10 +97,11 @@ export default async function KalenderPage({
 }) {
   const { locale } = await params;
   const t = getAdminT(locale);
+  const isDemo = await isDemoReviewer();
 
   const [icsEvents, sessionItems] = await Promise.all([
-    fetchCalendarEvents(),
-    fetchSessions(),
+    isDemo ? Promise.resolve([]) : fetchCalendarEvents(),
+    fetchSessions(isDemo),
   ]);
 
   // Merge: if ICS not configured but sessions exist, still show sessions

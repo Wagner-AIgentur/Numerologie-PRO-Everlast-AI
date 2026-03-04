@@ -1,4 +1,5 @@
 import { adminClient } from '@/lib/supabase/admin';
+import { isDemoReviewer } from '@/lib/auth/admin-guard';
 import { getAdminT, getDateLocale } from '@/lib/i18n/admin';
 import { ShoppingBag } from 'lucide-react';
 
@@ -10,12 +11,15 @@ export default async function AdminBestellungenPage({
   const { locale } = await params;
   const t = getAdminT(locale);
   const dateLocale = getDateLocale(locale);
+  const isDemo = await isDemoReviewer();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: orders } = await (adminClient as any)
+  let ordersQuery = (adminClient as any)
     .from('orders')
     .select('id, customer_email, amount_cents, currency, status, metadata, created_at, profile_id')
-    .order('created_at', { ascending: false }) as { data: Array<{
+    .order('created_at', { ascending: false });
+  if (isDemo) ordersQuery = ordersQuery.eq('is_demo', true);
+  const { data: orders } = await ordersQuery as { data: Array<{
       id: string; customer_email: string; amount_cents: number; currency: string;
       status: string; metadata: Record<string, string> | null; created_at: string; profile_id: string | null;
       profile?: { full_name: string | null; email: string } | null;

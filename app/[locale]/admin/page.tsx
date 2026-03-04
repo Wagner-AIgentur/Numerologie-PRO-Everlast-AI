@@ -1,4 +1,5 @@
 import { adminClient } from '@/lib/supabase/admin';
+import { isDemoReviewer } from '@/lib/auth/admin-guard';
 import { getAdminT, getDateLocale } from '@/lib/i18n/admin';
 import { Clock, AlertTriangle, CalendarDays, Video } from 'lucide-react';
 import Link from 'next/link';
@@ -11,6 +12,11 @@ export default async function AdminDashboard({
 }) {
   const { locale } = await params;
   const t = getAdminT(locale);
+  const isDemo = await isDemoReviewer();
+
+  // Helper: conditionally scope query to demo data
+  const demoFilter = <T extends { eq: (col: string, val: boolean) => T }>(q: T) =>
+    isDemo ? q.eq('is_demo', true) : q;
 
   const [
     { count: totalKunden },
@@ -22,20 +28,20 @@ export default async function AdminDashboard({
     { data: followUps },
     { data: upcomingSessions },
   ] = await Promise.all([
-    adminClient.from('profiles').select('*', { count: 'exact', head: true }).neq('crm_status', 'admin'),
-    adminClient.from('contact_submissions').select('*', { count: 'exact', head: true }).eq('status', 'new'),
-    adminClient.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'paid'),
-    adminClient.from('sessions').select('*', { count: 'exact', head: true }).eq('status', 'scheduled'),
-    adminClient
+    demoFilter(adminClient.from('profiles').select('*', { count: 'exact', head: true }).neq('crm_status', 'admin')),
+    demoFilter(adminClient.from('contact_submissions').select('*', { count: 'exact', head: true }).eq('status', 'new')),
+    demoFilter(adminClient.from('orders').select('*', { count: 'exact', head: true }).eq('status', 'paid')),
+    demoFilter(adminClient.from('sessions').select('*', { count: 'exact', head: true }).eq('status', 'scheduled')),
+    demoFilter(adminClient
       .from('contact_submissions')
       .select('id, name, email, topic, created_at, status')
       .order('created_at', { ascending: false })
-      .limit(5),
-    adminClient
+      .limit(5)),
+    demoFilter(adminClient
       .from('orders')
       .select('id, customer_email, amount_cents, status, created_at, metadata')
       .order('created_at', { ascending: false })
-      .limit(5),
+      .limit(5)),
     adminClient
       .from('crm_notes')
       .select('id, profile_id, content, follow_up_date, created_at, profiles(full_name, email)')
@@ -43,13 +49,13 @@ export default async function AdminDashboard({
       .not('follow_up_date', 'is', null)
       .order('follow_up_date', { ascending: true })
       .limit(10),
-    adminClient
+    demoFilter(adminClient
       .from('sessions')
       .select('id, title, scheduled_at, status, session_type, package_type, platform, meeting_link, profile_id, profiles(full_name, email)')
       .gte('scheduled_at', new Date().toISOString())
       .in('status', ['scheduled', 'confirmed'])
       .order('scheduled_at', { ascending: true })
-      .limit(5),
+      .limit(5)),
   ]);
 
   const dateLocale = getDateLocale(locale);

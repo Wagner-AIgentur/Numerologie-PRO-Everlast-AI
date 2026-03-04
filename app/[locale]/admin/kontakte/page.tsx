@@ -1,4 +1,5 @@
 import { adminClient } from '@/lib/supabase/admin';
+import { isDemoReviewer } from '@/lib/auth/admin-guard';
 import { getAdminT, getDateLocale } from '@/lib/i18n/admin';
 import { MessageSquare, Mail } from 'lucide-react';
 import ContactStatusButtons from '@/components/admin/crm/ContactStatusButtons';
@@ -11,11 +12,14 @@ export default async function KontaktePage({
   const { locale } = await params;
   const t = getAdminT(locale);
   const dateLocale = getDateLocale(locale);
+  const isDemo = await isDemoReviewer();
 
-  const { data: submissions } = await adminClient
+  let query = adminClient
     .from('contact_submissions')
     .select('*')
     .order('created_at', { ascending: false });
+  if (isDemo) query = query.eq('is_demo', true);
+  const { data: submissions } = await query;
 
   const statusConfig: Record<string, { label: string; color: string }> = {
     new: { label: t.statusNew, color: 'bg-yellow-500/10 text-yellow-400' },
