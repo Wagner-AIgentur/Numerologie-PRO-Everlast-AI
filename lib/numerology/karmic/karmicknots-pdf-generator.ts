@@ -130,12 +130,67 @@ const T = {
 
 function p1Cover(result: KarmicKnotsResult, name: string, locale: Locale): string {
   const t = T[locale];
-  const today = new Date().toLocaleDateString(getDateLocale(locale), { day: '2-digit', month: '2-digit', year: 'numeric' });
-  const formulaHtml = `
-    <div class="cover-formula">
-      ${t.formulaLabel} ${result.dayArcana} + ${result.monthArcana} + ${result.yearArcana} = ${t.arcanaLabel} ${result.arcanaNumber}
+  const today = new Date().toLocaleDateString(getDateLocale(locale), {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
+
+  return `
+    <div class="page cover">
+      ${pageFrame()}
+
+      <img class="cover-logo" src="${LOGO_FINAL}" alt="Numerologie PRO" />
+
+      <div class="cover-title">${t.coverTitle}</div>
+      <div class="cover-subtitle">
+        ${t.coverSubtitle}
+      </div>
+
+      <div class="cover-divider">
+        <div class="cover-divider-line"></div>
+        <div class="cover-divider-dot"></div>
+        <div class="cover-divider-line right"></div>
+      </div>
+
+      <div class="cover-label">${t.preparedFor}</div>
+      <div class="cover-name">${name}</div>
+
+      <div class="cover-label" style="margin-top: 24px;">${t.birthdate}</div>
+      <div class="cover-birthdate">${result.birthdate}</div>
+
+      <div class="cover-arcana-badge">
+        <span>${t.arcanaLabel} ${result.arcanaNumber} — ${result.arcana.name}</span>
+      </div>
+
+
+      <div class="cover-footer">
+        ${t.createdOn} ${today} &nbsp;·&nbsp; numerologie-pro.de
+      </div>
     </div>
   `;
+}
+
+function generateCoverPage(
+  result: KarmicKnotsResult,
+  customerName: string,
+  locale: Locale
+): string {
+  return p1Cover(result, customerName, locale);
+}
+
+// OLD FUNCTION - REMOVE AFTER MIGRATION
+function OLD_generateCoverPage(
+  result: KarmicKnotsResult,
+  customerName: string,
+  locale: Locale
+): string {
+  const t = T[locale];
+  const today = new Date().toLocaleDateString(getDateLocale(locale), {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
   return coverPage({
     coverPhotoUri: COVER_PHOTO,
     title: t.coverTitle,

@@ -51,11 +51,11 @@ export const PAGE_SEO: Record<string, PageSeo> = {
   'ueber-mich': {
     title: {
       de: 'Über Swetlana Wagner',
-      ru: 'Нумеролог Светлана Вагнер',
+      ru: 'Обо мне — Сертифицированный нумеролог',
     },
     description: {
       de: 'Swetlana Wagner: Zertifizierte Numerologin mit 10+ Jahren Erfahrung, 11 Zertifikaten und 500+ Beratungen. Spezialisiert auf Pythagoras Psychomatrix — jetzt kennenlernen.',
-      ru: 'Нумеролог Светлана Вагнер: 10+ лет опыта, 11 сертификатов, 500+ консультаций. Эксперт по квадрату Пифагора и психоматрице — запишитесь на консультацию.',
+      ru: 'Светлана Вагнер: Сертифицированный нумеролог с 5+ лет опыта и 500+ консультаций. Специализация — цифровой психоанализ.',
     },
   },
   kontakt: {
