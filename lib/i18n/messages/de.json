@@ -513,6 +513,9 @@
     "sectionTitleAccent": "PDF-Analysen",
     "sectionSubtitle": "Entdecke die Geheimnisse deiner Geburtszahlen. Jede Analyse basiert auf den 22 Arkanen der karmischen Numerologie.",
     "cta": "Jetzt bestellen",
+    "buy": "Jetzt kaufen",
+    "birthdatePlaceholder": "Geburtsdatum (TT.MM.JJJJ)",
+    "phonePlaceholder": "+49 176 1234567",
     "birthdayCode": {
       "title": "Geburtstags-Code",
       "desc": "Dein Geburtstag ist deine Visitenkarte. Erfahre, welche Qualitäten du aus der Vergangenheit mitbringst und wie andere dich wahrnehmen."
