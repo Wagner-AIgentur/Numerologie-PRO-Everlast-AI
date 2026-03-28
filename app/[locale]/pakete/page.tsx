@@ -459,8 +459,6 @@ export default function PaketePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-4xl mx-auto">
               {pdfPackages.map((pkg, idx) => {
                 const Icon = pkg.icon;
-                const isLoading = loadingKey === pkg.key;
-                const isOpen = openPdfCard === pkg.key;
                 return (
                   <motion.div
                     key={pkg.key}
@@ -469,7 +467,10 @@ export default function PaketePage() {
                     animate="visible"
                     custom={idx}
                   >
-                    <PremiumCard className="relative flex flex-col h-full p-5">
+                    <PremiumCard
+                      className="flex flex-col h-full p-5 cursor-pointer hover:border-gold/40 transition-colors"
+                      onClick={() => setOpenPdfCard(pkg.key)}
+                    >
                       <div className="flex h-11 w-11 items-center justify-center rounded-[10px] border border-gold/20 bg-gold/10">
                         <Icon className="h-5 w-5 text-gold" strokeWidth={1.5} />
                       </div>
@@ -484,97 +485,140 @@ export default function PaketePage() {
                           {t(`${pkg.tKey}.price`)}
                         </span>
                       </div>
-
-                      <AnimatePresence mode="wait">
-                        {isOpen ? (
-                          <motion.div
-                            key="form"
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={{ duration: 0.25 }}
-                            className="mt-3 space-y-2.5 overflow-hidden"
-                          >
-                            <button
-                              onClick={() => setOpenPdfCard(null)}
-                              className="absolute top-2 right-2 text-white/30 hover:text-white/60 transition-colors"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-
-                            <input
-                              type="text"
-                              placeholder={t('pdfBirthdatePlaceholder')}
-                              value={pdfBirthdate}
-                              onChange={(e) => setPdfBirthdate(e.target.value)}
-                              className="w-full rounded-lg border border-gold/20 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-gold/50 focus:outline-none focus:ring-1 focus:ring-gold/30 transition"
-                            />
-
-                            <input
-                              type="tel"
-                              placeholder={t('pdfPhonePlaceholder')}
-                              value={pdfPhone}
-                              onChange={(e) => setPdfPhone(e.target.value)}
-                              className="w-full rounded-lg border border-gold/20 bg-white/5 px-3 py-2.5 text-sm text-white placeholder:text-white/30 focus:border-gold/50 focus:outline-none focus:ring-1 focus:ring-gold/30 transition"
-                            />
-
-                            <div className="flex gap-1 rounded-lg bg-white/5 p-1">
-                              <button
-                                onClick={() => setDeliveryChannel('telegram')}
-                                className={`flex-1 flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-medium transition-all ${
-                                  deliveryChannel === 'telegram'
-                                    ? 'bg-gold/15 text-gold'
-                                    : 'text-white/40 hover:text-white/60'
-                                }`}
-                              >
-                                <Send className="h-3.5 w-3.5" strokeWidth={1.5} />
-                                Telegram
-                              </button>
-                              <button
-                                onClick={() => setDeliveryChannel('whatsapp')}
-                                className={`flex-1 flex items-center justify-center gap-1.5 rounded-md px-2 py-2 text-xs font-medium transition-all ${
-                                  deliveryChannel === 'whatsapp'
-                                    ? 'bg-gold/15 text-gold'
-                                    : 'text-white/40 hover:text-white/60'
-                                }`}
-                              >
-                                <MessageCircle className="h-3.5 w-3.5" strokeWidth={1.5} />
-                                WhatsApp
-                              </button>
-                            </div>
-
-                            <GoldButton
-                              onClick={() => handlePdfCheckout(pkg.key)}
-                              variant="primary"
-                              size="sm"
-                              className="w-full"
-                              disabled={isLoading || !pdfBirthdate || !pdfPhone}
-                            >
-                              {isLoading ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                              ) : (
-                                t('pdfBuy')
-                              )}
-                            </GoldButton>
-                          </motion.div>
-                        ) : (
-                          <div className="mt-3">
-                            <GoldButton
-                              onClick={() => setOpenPdfCard(pkg.key)}
-                              variant="outline"
-                              size="sm"
-                              className="w-full"
-                            >
-                              {t('pdfBuy')}
-                            </GoldButton>
-                          </div>
-                        )}
-                      </AnimatePresence>
+                      <div className="mt-3">
+                        <GoldButton
+                          variant="outline"
+                          size="sm"
+                          className="w-full pointer-events-none"
+                        >
+                          {t('pdfBuy')}
+                        </GoldButton>
+                      </div>
                     </PremiumCard>
                   </motion.div>
                 );
               })}
             </div>
+
+            {/* PDF Detail Modal */}
+            <AnimatePresence>
+              {openPdfCard && (() => {
+                const activePkg = pdfPackages.find((p) => p.key === openPdfCard);
+                if (!activePkg) return null;
+                const ActiveIcon = activePkg.icon;
+                const isLoading = loadingKey === activePkg.key;
+                return (
+                  <motion.div
+                    key="pdf-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center px-4 py-10"
+                    onClick={() => setOpenPdfCard(null)}
+                  >
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                      transition={{ duration: 0.25 }}
+                      className="relative w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-gold/20 bg-[rgba(10,35,50,0.95)] backdrop-blur-md p-7"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <button
+                        onClick={() => setOpenPdfCard(null)}
+                        className="absolute top-4 right-4 text-white/30 hover:text-white/60 transition-colors"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+
+                      <div className="flex items-center gap-4 mb-5">
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[12px] border border-gold/20 bg-gold/10">
+                          <ActiveIcon className="h-7 w-7 text-gold" strokeWidth={1.5} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold text-white">
+                            {t(`${activePkg.tKey}.title`)}
+                          </h3>
+                          <span className="text-2xl font-bold text-gold">{t(`${activePkg.tKey}.price`)}</span>
+                        </div>
+                      </div>
+
+                      <p className="text-sm text-white/60 leading-relaxed mb-7">
+                        {t(`${activePkg.tKey}.desc`)}
+                      </p>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm text-white/70 mb-1.5">{t('pdfBirthdate')}</label>
+                          <input
+                            type="text"
+                            placeholder={t('pdfBirthdatePlaceholder')}
+                            value={pdfBirthdate}
+                            onChange={(e) => setPdfBirthdate(e.target.value)}
+                            className="w-full rounded-xl border border-gold/20 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-gold/50 focus:outline-none focus:ring-1 focus:ring-gold/30 transition"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm text-white/70 mb-1.5">{t('pdfPhone')}</label>
+                          <input
+                            type="tel"
+                            placeholder={t('pdfPhonePlaceholder')}
+                            value={pdfPhone}
+                            onChange={(e) => setPdfPhone(e.target.value)}
+                            className="w-full rounded-xl border border-gold/20 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-gold/50 focus:outline-none focus:ring-1 focus:ring-gold/30 transition"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm text-white/70 mb-1.5">{t('pdfDeliveryLabel')}</label>
+                          <div className="flex gap-1 rounded-xl bg-white/5 p-1">
+                            <button
+                              onClick={() => setDeliveryChannel('telegram')}
+                              className={`flex-1 flex items-center justify-center gap-2 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-all ${
+                                deliveryChannel === 'telegram'
+                                  ? 'bg-gold/15 text-gold shadow-sm'
+                                  : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+                              }`}
+                            >
+                              <Send className="h-4 w-4" strokeWidth={1.5} />
+                              Telegram
+                            </button>
+                            <button
+                              onClick={() => setDeliveryChannel('whatsapp')}
+                              className={`flex-1 flex items-center justify-center gap-2 rounded-[10px] px-3 py-2.5 text-sm font-medium transition-all ${
+                                deliveryChannel === 'whatsapp'
+                                  ? 'bg-gold/15 text-gold shadow-sm'
+                                  : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+                              }`}
+                            >
+                              <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
+                              WhatsApp
+                            </button>
+                          </div>
+                        </div>
+
+                        <GoldButton
+                          onClick={() => handlePdfCheckout(activePkg.key)}
+                          variant="primary"
+                          size="lg"
+                          className="w-full mt-2"
+                          disabled={isLoading || !pdfBirthdate || !pdfPhone}
+                        >
+                          {isLoading ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <>{t('pdfBuy')} — {t(`${activePkg.tKey}.price`)}</>
+                          )}
+                        </GoldButton>
+                      </div>
+                    </motion.div>
+                  </motion.div>
+                );
+              })()}
+            </AnimatePresence>
           </motion.div>
 
           {/* Free consultation CTA */}

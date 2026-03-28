@@ -8,6 +8,7 @@ interface PremiumCardProps {
   className?: string;
   featured?: boolean;
   hoverable?: boolean;
+  onClick?: () => void;
 }
 
 export default function PremiumCard({
@@ -15,6 +16,7 @@ export default function PremiumCard({
   className,
   featured = false,
   hoverable = true,
+  onClick,
 }: PremiumCardProps) {
   const cardClasses = cn(
     'rounded-[16px] backdrop-blur-2xl bg-[rgba(15,48,63,0.2)] shadow-card transition-all duration-300',
@@ -31,11 +33,12 @@ export default function PremiumCard({
         className={cardClasses}
         whileHover={{ scale: 1.02, y: -4 }}
         transition={{ type: 'spring', stiffness: 400, damping: 25, bounce: 0.2 }}
+        onClick={onClick}
       >
         {children}
       </motion.div>
     );
   }
 
-  return <div className={cardClasses}>{children}</div>;
+  return <div className={cardClasses} onClick={onClick}>{children}</div>;
 }
