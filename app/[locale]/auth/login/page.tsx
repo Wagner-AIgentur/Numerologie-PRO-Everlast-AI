@@ -122,7 +122,7 @@ function LoginForm() {
               <div className="mb-5 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3.5 text-sm text-gold/90">
                 {de
                   ? 'Registriere dich oder melde dich an, um deine Inhalte in deinem persönlichen Kundenportal zu erhalten. Dort findest du deine PDF-Analysen, Aufzeichnungen und alle Unterlagen.'
-                  : 'Зарегистрируйтесь или войдите, чтобы получить доступ к своему личному кабинету. Там вы найдёте ваши PDF-анализы, записи и все материалы.'}
+                  : 'Добро пожаловать! Все материалы будут доступны в вашем личном кабинете. Пожалуйста, зарегистрируйтесь или войдите, чтобы получить доступ.'}
               </div>
             )}
 

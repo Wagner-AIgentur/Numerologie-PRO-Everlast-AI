@@ -27,7 +27,12 @@ export async function GET(
     }
 
     // PKCE code exchange failed — email was confirmed by Supabase before redirect
-    return NextResponse.redirect(`${origin}/${locale}/auth/login?confirmed=true`);
+    const loginParams = new URLSearchParams({ confirmed: 'true' });
+    if (next !== `/${locale}/dashboard`) {
+      loginParams.set('redirectTo', next);
+      loginParams.set('reason', 'checkout');
+    }
+    return NextResponse.redirect(`${origin}/${locale}/auth/login?${loginParams.toString()}`);
   }
 
   // No code parameter — Supabase may redirect with error params instead of code
@@ -35,7 +40,12 @@ export async function GET(
   // The email IS confirmed before Supabase redirects, so show success.
   const hasSupabaseError = searchParams.get('error') || searchParams.get('error_code');
   if (hasSupabaseError) {
-    return NextResponse.redirect(`${origin}/${locale}/auth/login?confirmed=true`);
+    const loginParams = new URLSearchParams({ confirmed: 'true' });
+    if (next !== `/${locale}/dashboard`) {
+      loginParams.set('redirectTo', next);
+      loginParams.set('reason', 'checkout');
+    }
+    return NextResponse.redirect(`${origin}/${locale}/auth/login?${loginParams.toString()}`);
   }
 
   // Truly no context — someone navigated here directly

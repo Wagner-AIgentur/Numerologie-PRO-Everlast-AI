@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, fullName, locale, marketingConsent } = await request.json();
+    const { email, password, fullName, locale, marketingConsent, redirectTo: clientRedirectTo } = await request.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -33,7 +33,12 @@ export async function POST(request: NextRequest) {
 
     const lang = locale === 'ru' ? 'ru' : 'de';
     const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://numerologie-pro.com';
-    const redirectTo = `${siteUrl}/${lang}/auth/callback`;
+    // If client passes a redirectTo (e.g. /de/pakete?auto_checkout=...), encode it as ?next= on the callback
+    const callbackUrl = new URL(`${siteUrl}/${lang}/auth/callback`);
+    if (clientRedirectTo && typeof clientRedirectTo === 'string' && clientRedirectTo.startsWith('/')) {
+      callbackUrl.searchParams.set('next', clientRedirectTo);
+    }
+    const redirectTo = callbackUrl.toString();
 
     // Generate signup link via admin API — this creates the user WITHOUT sending Supabase's default email
     const { data, error } = await adminClient.auth.admin.generateLink({

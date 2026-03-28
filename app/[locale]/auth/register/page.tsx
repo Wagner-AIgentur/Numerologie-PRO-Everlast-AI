@@ -44,7 +44,7 @@ function RegisterForm() {
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, fullName, locale, marketingConsent }),
+        body: JSON.stringify({ email, password, fullName, locale, marketingConsent, redirectTo: redirectTo || undefined }),
       });
 
       const data = await res.json();
@@ -121,7 +121,7 @@ function RegisterForm() {
               <div className="mb-5 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3.5 text-sm text-gold/90">
                 {de
                   ? 'Erstelle ein Konto, um deine Inhalte in deinem persönlichen Kundenportal zu erhalten. Dort findest du deine PDF-Analysen, Aufzeichnungen und alle Unterlagen.'
-                  : 'Создайте аккаунт, чтобы получить доступ к своему личному кабинету. Там вы найдёте ваши PDF-анализы, записи и все материалы.'}
+                  : 'Добро пожаловать! Все материалы будут доступны в вашем личном кабинете. Пожалуйста, зарегистрируйтесь или войдите, чтобы получить доступ.'}
               </div>
             )}
 
@@ -225,7 +225,13 @@ function RegisterForm() {
 
             <p className="mt-6 text-center text-xs text-white/40">
               {de ? 'Bereits ein Konto?' : 'Уже есть аккаунт?'}{' '}
-              <Link href="/auth/login" className="text-gold/70 hover:text-gold transition-colors">
+              <Link
+                href={reason === 'checkout' && redirectTo
+                  ? `/auth/login?redirectTo=${encodeURIComponent(redirectTo)}&reason=checkout`
+                  : '/auth/login'
+                }
+                className="text-gold/70 hover:text-gold transition-colors"
+              >
                 {de ? 'Anmelden' : 'Войти'}
               </Link>
             </p>

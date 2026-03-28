@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslations, useLocale } from 'next-intl';
@@ -56,6 +56,52 @@ export default function PaketePage() {
   const [pdfBirthdate, setPdfBirthdate] = useState('');
   const [pdfPhone, setPdfPhone] = useState('');
 
+  // Auto-checkout: when returning from auth with package details in URL
+  const autoCheckoutTriggered = useRef(false);
+  useEffect(() => {
+    if (autoCheckoutTriggered.current) return;
+    const autoKey = searchParams.get('auto_checkout');
+    if (!autoKey) return;
+    autoCheckoutTriggered.current = true;
+
+    const birthdate = searchParams.get('birthdate') || '';
+    const phone = searchParams.get('phone') || '';
+    const channel = (searchParams.get('channel') as 'telegram' | 'whatsapp') || 'telegram';
+    const coupon = searchParams.get('coupon') || couponFromUrl;
+
+    // Fire checkout API directly
+    const doCheckout = async () => {
+      setLoadingKey(autoKey);
+      try {
+        const body: Record<string, string> = { packageKey: autoKey, locale };
+        if (birthdate) body.birthdate = birthdate;
+        if (phone) body.phone = phone;
+        if (channel) body.deliveryChannel = channel;
+        if (coupon) body.couponCode = coupon;
+
+        const res = await fetch('/api/stripe/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        const data = await res.json();
+        if (data?.url) {
+          window.location.href = data.url;
+        } else {
+          setLoadingKey(null);
+          // Clean URL params so user can browse normally
+          router.replace(`/${locale}/pakete`);
+        }
+      } catch {
+        setLoadingKey(null);
+        router.replace(`/${locale}/pakete`);
+      }
+    };
+
+    doCheckout();
+  }, [searchParams, locale, couponFromUrl, router]);
+
   function getActiveTab(pkgKey: string) {
     return activeTabs[pkgKey] || 'info';
   }
@@ -82,7 +128,15 @@ export default function PaketePage() {
           }),
         });
         if (res.status === 401) {
-          window.location.href = `/${locale}/auth/login?redirectTo=/${locale}/pakete&reason=checkout`;
+          const params = new URLSearchParams({
+            auto_checkout: packageKey,
+            birthdate: pdfBirthdate,
+            phone: pdfPhone,
+            channel: deliveryChannel,
+          });
+          if (couponFromUrl) params.set('coupon', couponFromUrl);
+          const paketeUrl = `/${locale}/pakete?${params.toString()}`;
+          window.location.href = `/${locale}/auth/login?redirectTo=${encodeURIComponent(paketeUrl)}&reason=checkout`;
           return;
         }
         const data = await res.json();
@@ -117,7 +171,10 @@ export default function PaketePage() {
         });
 
         if (res.status === 401) {
-          window.location.href = `/${locale}/auth/login?redirectTo=/${locale}/pakete&reason=checkout`;
+          const params = new URLSearchParams({ auto_checkout: resolvedKey });
+          if (couponFromUrl) params.set('coupon', couponFromUrl);
+          const paketeUrl = `/${locale}/pakete?${params.toString()}`;
+          window.location.href = `/${locale}/auth/login?redirectTo=${encodeURIComponent(paketeUrl)}&reason=checkout`;
           return;
         }
 
