@@ -82,7 +82,7 @@ export default function PaketePage() {
           }),
         });
         if (res.status === 401) {
-          window.location.href = `/${locale}/auth/login?redirectTo=/${locale}/pakete`;
+          window.location.href = `/${locale}/auth/login?redirectTo=/${locale}/pakete&reason=checkout`;
           return;
         }
         const data = await res.json();
@@ -117,7 +117,7 @@ export default function PaketePage() {
         });
 
         if (res.status === 401) {
-          window.location.href = `/${locale}/auth/login?redirectTo=/${locale}/pakete`;
+          window.location.href = `/${locale}/auth/login?redirectTo=/${locale}/pakete&reason=checkout`;
           return;
         }
 

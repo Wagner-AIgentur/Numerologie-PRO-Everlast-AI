@@ -24,6 +24,7 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const isConfirmed = searchParams.get('confirmed') === 'true';
+  const reason = searchParams.get('reason');
   const [success] = useState<string | null>(() => {
     if (isConfirmed) {
       return locale === 'de'
@@ -117,6 +118,14 @@ function LoginForm() {
               {de ? 'Melde dich in deinem Bereich an' : 'Войдите в личный кабинет'}
             </p>
 
+            {reason === 'checkout' && (
+              <div className="mb-5 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3.5 text-sm text-gold/90">
+                {de
+                  ? 'Registriere dich oder melde dich an, um deine Inhalte in deinem persönlichen Kundenportal zu erhalten. Dort findest du deine PDF-Analysen, Aufzeichnungen und alle Unterlagen.'
+                  : 'Зарегистрируйтесь или войдите, чтобы получить доступ к своему личному кабинету. Там вы найдёте ваши PDF-анализы, записи и все материалы.'}
+              </div>
+            )}
+
             {success && (
               <div className="mb-5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3.5 text-sm text-emerald-400 flex items-center gap-2.5">
                 <CheckCircle2 className="h-5 w-5 shrink-0" strokeWidth={1.5} />
@@ -188,7 +197,13 @@ function LoginForm() {
 
             <p className="mt-6 text-center text-xs text-white/40">
               {de ? 'Noch kein Konto?' : 'Нет аккаунта?'}{' '}
-              <Link href="/auth/register" className="text-gold/70 hover:text-gold transition-colors">
+              <Link
+                href={reason === 'checkout'
+                  ? `/auth/register?redirectTo=${encodeURIComponent(redirectTo)}&reason=checkout`
+                  : '/auth/register'
+                }
+                className="text-gold/70 hover:text-gold transition-colors"
+              >
                 {de ? 'Registrieren' : 'Зарегистрироваться'}
               </Link>
             </p>

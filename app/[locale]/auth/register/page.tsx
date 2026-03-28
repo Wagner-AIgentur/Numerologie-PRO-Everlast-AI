@@ -15,6 +15,7 @@ function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo');
+  const reason = searchParams.get('reason');
   const de = locale === 'de';
 
   const [fullName, setFullName] = useState('');
@@ -115,6 +116,14 @@ function RegisterForm() {
             <p className="text-white/50 text-sm text-center mb-8">
               {de ? 'Zugang zu deinem persönlichen Bereich' : 'Доступ к личному кабинету'}
             </p>
+
+            {reason === 'checkout' && (
+              <div className="mb-5 rounded-xl border border-gold/30 bg-gold/5 px-4 py-3.5 text-sm text-gold/90">
+                {de
+                  ? 'Erstelle ein Konto, um deine Inhalte in deinem persönlichen Kundenportal zu erhalten. Dort findest du deine PDF-Analysen, Aufzeichnungen und alle Unterlagen.'
+                  : 'Создайте аккаунт, чтобы получить доступ к своему личному кабинету. Там вы найдёте ваши PDF-анализы, записи и все материалы.'}
+              </div>
+            )}
 
             {error && (
               <div className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
