@@ -7,10 +7,10 @@ import PremiumCard from '@/components/ui/PremiumCard';
 import GoldButton from '@/components/ui/GoldButton';
 
 const products = [
-  { key: 'birthdayCode', icon: Sparkles, href: '/karmic/birthday-code' },
-  { key: 'selfRealization', icon: Star, href: '/karmic/selfrealization' },
-  { key: 'karmicKnots', icon: Waypoints, href: '/karmic/karmic-knots' },
-  { key: 'yearForecast', icon: CalendarDays, href: '/karmic/year-forecast' },
+  { key: 'birthdayCode', icon: Sparkles, price: '9,99€' },
+  { key: 'selfRealization', icon: Star, price: '9,99€' },
+  { key: 'karmicKnots', icon: Waypoints, price: '9,99€' },
+  { key: 'yearForecast', icon: CalendarDays, price: '19,99€' },
 ] as const;
 
 const EASE = [0.12, 0.23, 0.5, 1] as const;
@@ -65,9 +65,9 @@ export default function KarmicProducts() {
                 custom={idx}
               >
                 <PremiumCard className="relative flex flex-col h-full p-6">
-                  {/* badge */}
+                  {/* price badge */}
                   <span className="absolute -top-3 right-4 rounded-pill bg-gold/10 border border-gold/30 px-3 py-1 text-xs font-semibold text-gold">
-                    {t('badge')}
+                    {product.price}
                   </span>
 
                   {/* icon */}
@@ -88,7 +88,7 @@ export default function KarmicProducts() {
                   {/* CTA */}
                   <div className="mt-6">
                     <GoldButton
-                      href={product.href}
+                      href="/pakete#pdf"
                       variant="outline"
                       size="md"
                       className="w-full"
