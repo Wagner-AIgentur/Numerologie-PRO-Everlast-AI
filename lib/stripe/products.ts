@@ -102,19 +102,76 @@ export const PACKAGES = {
     is_consultation: false,
     cal_link: 'https://cal.com/swetlana-wagner-vn81pp/карта-жизни-базовыи-разбор',
   },
-  pdf_analyse: {
-    key: 'pdf_analyse',
-    name_de: 'PDF-Analyse',
-    name_ru: 'PDF-Анализ',
+  // ── PDF-Pakete (Svetlana erstellt manuell, Kunde wählt Kanal) ──
+  kod_dnya_rozhdeniya: {
+    key: 'kod_dnya_rozhdeniya',
+    name_de: 'Geburtstagscode',
+    name_ru: 'Код дня рождения',
     price_cents: 999,
     currency: 'eur',
     duration_minutes: 0,
     is_consultation: false,
+    is_pdf: true,
     cal_link: null,
+    stripe_product_id: 'prod_UEVXaKL2b0VjVt',
+    stripe_price_id: 'price_1TG2VxRwHYv01b520EY2IuTn',
+  },
+  kod_samorealizacii: {
+    key: 'kod_samorealizacii',
+    name_de: 'Selbstverwirklichungscode',
+    name_ru: 'Код самореализации',
+    price_cents: 999,
+    currency: 'eur',
+    duration_minutes: 0,
+    is_consultation: false,
+    is_pdf: true,
+    cal_link: null,
+    stripe_product_id: 'prod_UEVXjWdGFCsJ7M',
+    stripe_price_id: 'price_1TG2WQRwHYv01b52orBVtzLP',
+  },
+  kod_karmicheskogo_uzla: {
+    key: 'kod_karmicheskogo_uzla',
+    name_de: 'Karmischer Knotencode',
+    name_ru: 'Код кармического узла',
+    price_cents: 999,
+    currency: 'eur',
+    duration_minutes: 0,
+    is_consultation: false,
+    is_pdf: true,
+    cal_link: null,
+    stripe_product_id: 'prod_UEVXJP5BqAoJlq',
+    stripe_price_id: 'price_1TG2WkRwHYv01b52SWJUCc6P',
+  },
+  prognoz_na_god_pdf: {
+    key: 'prognoz_na_god_pdf',
+    name_de: 'Jahresprognose PDF',
+    name_ru: 'Прогноз на год',
+    price_cents: 1999,
+    currency: 'eur',
+    duration_minutes: 0,
+    is_consultation: false,
+    is_pdf: true,
+    cal_link: null,
+    stripe_product_id: 'prod_UEVYTK7xzYAAPc',
+    stripe_price_id: 'price_1TG2XDRwHYv01b52UKGBrPA3',
   },
 } as const;
 
 export type PackageKey = keyof typeof PACKAGES;
+
+/** All PDF package keys (manual delivery by Svetlana) */
+export const PDF_PACKAGE_KEYS = [
+  'kod_dnya_rozhdeniya',
+  'kod_samorealizacii',
+  'kod_karmicheskogo_uzla',
+  'prognoz_na_god_pdf',
+] as const;
+
+export type PdfPackageKey = (typeof PDF_PACKAGE_KEYS)[number];
+
+export function isPdfPackage(key: string): key is PdfPackageKey {
+  return PDF_PACKAGE_KEYS.includes(key as PdfPackageKey);
+}
 
 // Free consultation Cal.com link (used across the site)
 export const FREE_CONSULTATION_CAL_LINK =

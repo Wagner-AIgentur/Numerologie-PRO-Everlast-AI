@@ -4,6 +4,7 @@ import { adminClient } from '@/lib/supabase/admin';
 import { sendEmail } from '@/lib/email/send';
 import { orderConfirmationEmail } from '@/lib/email/templates/order-confirmation';
 import { pdfDeliveryEmail } from '@/lib/email/templates/pdf-delivery';
+import { isPdfPackage } from '@/lib/stripe/products';
 import { calculateMatrix } from '@/lib/numerology/calculate';
 import { generatePremiumPDF } from '@/lib/numerology/premium-pdf-generator';
 import { notifyPdfDelivery } from '@/lib/telegram/notify';
@@ -188,7 +189,10 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     monatsprognose: { de: 'Monatsprognose', ru: 'Прогноз на месяц' },
     tagesprognose: { de: 'Tagesprognose', ru: 'Прогноз на день' },
     lebenskarte: { de: 'Lebenskarte', ru: 'Карта жизни' },
-    pdf_analyse: { de: 'PDF-Analyse', ru: 'PDF-Анализ' },
+    kod_dnya_rozhdeniya: { de: 'Geburtstagscode', ru: 'Код дня рождения' },
+    kod_samorealizacii: { de: 'Selbstverwirklichungscode', ru: 'Код самореализации' },
+    kod_karmicheskogo_uzla: { de: 'Karmischer Knotencode', ru: 'Код кармического узла' },
+    prognoz_na_god_pdf: { de: 'Jahresprognose PDF', ru: 'Прогноз на год' },
   };
 
   try {
@@ -214,7 +218,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   }
 
   // Create session placeholder for consultation packages (Cal.com webhook will fill in booking details)
-  if (order?.id && packageKey !== 'pdf_analyse' && resolvedProfileId) {
+  if (order?.id && !isPdfPackage(packageKey) && packageKey !== 'pdf_analyse' && resolvedProfileId) {
     await adminClient.from('sessions').insert({
       profile_id: resolvedProfileId,
       order_id: order.id,
@@ -278,40 +282,78 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     }
   }
 
-  // PDF Delivery for pdf_analyse purchases
-  if (packageKey === 'pdf_analyse' && order?.id) {
+  // Manual PDF packages — save phone, notify Svetlana, send confirmation email
+  if (isPdfPackage(packageKey) && order?.id) {
     const birthdateStr = metadata?.birthdate ?? '';
-    if (birthdateStr) {
+    const deliveryChannel = metadata?.delivery_channel || 'telegram';
+    const phoneNumber = metadata?.phone ?? '';
+    const productName = packageNames[packageKey]?.ru ?? packageKey;
+    const productNameLocalized = packageNames[packageKey]?.[locale] ?? packageKey;
+    const customerName = session.customer_details?.name ?? email.split('@')[0];
+
+    // Save phone number to profile
+    if (resolvedProfileId && phoneNumber) {
+      await adminClient.from('profiles').update({
+        phone: phoneNumber,
+        preferred_channel: deliveryChannel,
+      }).eq('id', resolvedProfileId).then(() => {}, () => {});
+    }
+
+    // Mark order as pending manual PDF creation
+    await adminClient.from('orders').update({
+      status: 'pending_pdf',
+      notes: `Delivery: ${deliveryChannel} | Phone: ${phoneNumber} | Birthdate: ${birthdateStr}`,
+    }).eq('id', order.id).then(() => {}, () => {});
+
+    // Notify Svetlana via Telegram admin chat (always in Russian)
+    const adminChatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+    if (adminChatId) {
       try {
-        await deliverPDF({
-          orderId: order.id,
-          email,
-          birthdate: birthdateStr,
-          locale,
-          profileId: resolvedProfileId,
+        const { sendMessage } = await import('@/lib/telegram/bot');
+        const amountFormatted = ((amount_total ?? 0) / 100).toFixed(2);
+        await sendMessage({
+          chat_id: adminChatId,
+          text: [
+            `📦 <b>Новый заказ PDF!</b>`,
+            ``,
+            `👤 <b>Клиент:</b> ${customerName}`,
+            `📧 <b>Email:</b> ${email}`,
+            `📱 <b>Телефон:</b> ${phoneNumber || '—'}`,
+            `🎂 <b>Дата рождения:</b> ${birthdateStr || '—'}`,
+            `📋 <b>Пакет:</b> ${productName}`,
+            `💰 <b>Сумма:</b> ${amountFormatted}€`,
+            `📬 <b>Доставка:</b> ${deliveryChannel === 'whatsapp' ? 'WhatsApp' : 'Telegram'}`,
+            ``,
+            `🔗 <b>Order ID:</b> <code>${order.id}</code>`,
+            ``,
+            `💡 Напишите клиенту на ${deliveryChannel === 'whatsapp' ? 'WhatsApp' : 'Telegram'} и отправьте PDF после готовности.`,
+          ].join('\n'),
         });
-      } catch (pdfErr) {
-        console.error('[Stripe Webhook] PDF delivery failed:', pdfErr);
-        // Mark order for admin attention
-        await adminClient.from('orders').update({
-          status: 'pdf_failed',
-          notes: `PDF delivery failed: ${String(pdfErr).slice(0, 500)}`,
-        }).eq('id', order.id).then(() => {}, () => {});
-        // Notify admin via email (best-effort)
-        sendEmail({
-          to: process.env.ADMIN_EMAIL ?? process.env.RESEND_FROM_EMAIL ?? '',
-          subject: `[URGENT] PDF-Lieferung fehlgeschlagen — Order ${order.id}`,
-          html: `<p><strong>Kunde:</strong> ${email}<br><strong>Order:</strong> ${order.id}<br><strong>Geburtsdatum:</strong> ${birthdateStr}<br><strong>Fehler:</strong> ${String(pdfErr).slice(0, 1000)}</p><p>Bitte manuell im Admin-Panel prüfen.</p>`,
-          template: 'admin-notification',
-        }).catch(() => {});
+      } catch (tgErr) {
+        console.error('Admin Telegram notification failed:', tgErr);
       }
-    } else {
-      // Birthdate missing — flag for admin
-      console.error(`[Stripe Webhook] Order ${order.id} missing birthdate in metadata`);
-      await adminClient.from('orders').update({
-        status: 'pdf_failed',
-        notes: 'Birthdate missing in checkout metadata — PDF could not be generated',
-      }).eq('id', order.id).then(() => {}, () => {});
+    }
+
+    // Send confirmation email to customer (always in Russian for PDF packages)
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://numerologie-pro.com';
+      const dashboardUrl = `${baseUrl}/${locale}/dashboard/unterlagen`;
+      const { pdfOrderConfirmationEmail } = await import('@/lib/email/templates/pdf-order-confirmation');
+      const { subject: pdfSubject, html: pdfHtml } = pdfOrderConfirmationEmail({
+        name: customerName,
+        productName: productNameLocalized,
+        dashboardUrl,
+        language: locale,
+      });
+      await sendEmail({
+        to: email,
+        subject: pdfSubject,
+        html: pdfHtml,
+        template: 'pdf-order-confirmation',
+        profileId: resolvedProfileId,
+      });
+    } catch (emailErr) {
+      console.error('PDF order confirmation email failed:', emailErr);
     }
   }
 

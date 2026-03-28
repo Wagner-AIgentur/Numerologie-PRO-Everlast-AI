@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { stripe } from '@/lib/stripe/client';
-import { PACKAGES, type PackageKey } from '@/lib/stripe/products';
+import { PACKAGES, type PackageKey, isPdfPackage } from '@/lib/stripe/products';
 import { createClient } from '@/lib/supabase/server';
 import { adminClient } from '@/lib/supabase/admin';
 import { rateLimit, getClientIp } from '@/lib/rate-limit';
@@ -10,10 +10,14 @@ const schema = z.object({
   packageKey: z.enum([
     'beziehungsmatrix', 'lebensbestimmung', 'wachstumsplan', 'mein_kind',
     'geldkanal', 'jahresprognose', 'jahresprognose_pdf',
-    'monatsprognose', 'tagesprognose', 'lebenskarte', 'pdf_analyse',
+    'monatsprognose', 'tagesprognose', 'lebenskarte',
+    'kod_dnya_rozhdeniya', 'kod_samorealizacii',
+    'kod_karmicheskogo_uzla', 'prognoz_na_god_pdf',
   ]),
   locale: z.enum(['de', 'ru']).default('de'),
   birthdate: z.string().optional(),
+  deliveryChannel: z.enum(['whatsapp', 'telegram']).optional(),
+  phone: z.string().optional(),
   couponCode: z.string().optional(),
   referralCode: z.string().optional(),
 });
@@ -27,7 +31,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { packageKey, locale, birthdate, couponCode, referralCode } = schema.parse(body);
+    const { packageKey, locale, birthdate, deliveryChannel, phone, couponCode, referralCode } = schema.parse(body);
     const pkg = PACKAGES[packageKey as PackageKey];
 
     const ALLOWED_ORIGINS = [process.env.NEXT_PUBLIC_SITE_URL, 'https://numerologie-pro.com'];
@@ -76,10 +80,10 @@ export async function POST(request: NextRequest) {
     let successUrl: string;
     let cancelUrl: string;
 
-    if (packageKey === 'pdf_analyse' && birthdate) {
-      const [d, m, y] = birthdate.split('.');
-      successUrl = `${origin}/${locale}/rechner?d=${d}&m=${m}&y=${y}&session_id={CHECKOUT_SESSION_ID}`;
-      cancelUrl = `${origin}/${locale}/rechner?d=${d}&m=${m}&y=${y}`;
+    if (isPdfPackage(packageKey)) {
+      // PDF packages: redirect to success page (Svetlana delivers manually)
+      successUrl = `${origin}/${locale}/pdf/erfolg?session_id={CHECKOUT_SESSION_ID}`;
+      cancelUrl = `${origin}/${locale}/pakete?payment=cancelled`;
     } else if (pkg.is_consultation) {
       // Consultation packages: redirect to booking success page with Cal.com link
       successUrl = `${origin}/${locale}/buchung/erfolg?session_id={CHECKOUT_SESSION_ID}`;
@@ -129,6 +133,8 @@ export async function POST(request: NextRequest) {
         locale,
         profile_id: user?.id ?? '',
         birthdate: birthdate ?? '',
+        delivery_channel: deliveryChannel ?? '',
+        phone: phone ?? '',
         coupon_code: couponCode ?? '',
         coupon_id: couponId ?? '',
         referral_code: resolvedRefCode,

@@ -7,13 +7,20 @@ import { useTranslations, useLocale } from 'next-intl';
 import {
   Heart, Compass, TrendingUp, Baby, Banknote, CalendarRange,
   CalendarDays, Sun, Map, CheckCircle2, Star, Loader2, Clock,
-  Video, Info, ListChecks, Trophy, FileText,
+  Video, Info, ListChecks, Trophy, FileText, MessageCircle, Send,
 } from 'lucide-react';
 import PremiumCard from '@/components/ui/PremiumCard';
 import GoldButton from '@/components/ui/GoldButton';
 import BackgroundOrbs from '@/components/ui/BackgroundOrbs';
 import CalBookingButton from '@/components/ui/CalBookingButton';
-import { UI_KEY_TO_PACKAGE_KEY, FREE_CONSULTATION_CAL_PATH } from '@/lib/stripe/products';
+import { UI_KEY_TO_PACKAGE_KEY, FREE_CONSULTATION_CAL_PATH, type PdfPackageKey } from '@/lib/stripe/products';
+
+const pdfPackages = [
+  { key: 'kod_dnya_rozhdeniya' as PdfPackageKey, tKey: 'kodDnyaRozhdeniya', icon: Star },
+  { key: 'kod_samorealizacii' as PdfPackageKey, tKey: 'kodSamorealizacii', icon: Compass },
+  { key: 'kod_karmicheskogo_uzla' as PdfPackageKey, tKey: 'kodKarmicheskogoUzla', icon: Map },
+  { key: 'prognoz_na_god_pdf' as PdfPackageKey, tKey: 'prognozNaGodPdf', icon: CalendarRange },
+] as const;
 
 const packages = [
   { key: 'beziehungskarte', icon: Heart, featured: false, hasPdfOption: false },
@@ -45,6 +52,9 @@ export default function PaketePage() {
   const [loadingKey, setLoadingKey] = useState<string | null>(null);
   const [activeTabs, setActiveTabs] = useState<Record<string, string>>({});
   const [pdfSelected, setPdfSelected] = useState<Record<string, boolean>>({});
+  const [deliveryChannel, setDeliveryChannel] = useState<'telegram' | 'whatsapp'>('telegram');
+  const [pdfBirthdate, setPdfBirthdate] = useState('');
+  const [pdfPhone, setPdfPhone] = useState('');
 
   function getActiveTab(pkgKey: string) {
     return activeTabs[pkgKey] || 'info';
@@ -52,6 +62,39 @@ export default function PaketePage() {
 
   function setActiveTab(pkgKey: string, tab: string) {
     setActiveTabs(prev => ({ ...prev, [pkgKey]: tab }));
+  }
+
+  function handlePdfCheckout(packageKey: PdfPackageKey) {
+    if (!pdfBirthdate || !pdfPhone) return;
+    setLoadingKey(packageKey);
+    requestAnimationFrame(async () => {
+      try {
+        const res = await fetch('/api/stripe/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            packageKey,
+            locale,
+            birthdate: pdfBirthdate,
+            deliveryChannel,
+            phone: pdfPhone,
+            ...(couponFromUrl && { couponCode: couponFromUrl }),
+          }),
+        });
+        if (res.status === 401) {
+          window.location.href = `/${locale}/auth/login?redirectTo=/${locale}/pakete`;
+          return;
+        }
+        const data = await res.json();
+        if (data?.url) {
+          window.location.href = data.url;
+        } else {
+          setLoadingKey(null);
+        }
+      } catch {
+        setLoadingKey(null);
+      }
+    });
   }
 
   function handleCheckout(uiKey: string) {
@@ -336,6 +379,129 @@ export default function PaketePage() {
               );
             })}
           </div>
+
+          {/* ═══ PDF-Analysen Sektion ═══ */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="mt-20"
+          >
+            <div className="text-center mb-10">
+              <h2 className="font-serif text-2xl md:text-4xl font-bold text-white">
+                <FileText className="inline h-8 w-8 text-gold mr-2 -mt-1" strokeWidth={1.5} />
+                {t('pdfSectionTitle')}
+              </h2>
+              <p className="mt-3 text-white/60 text-base max-w-xl mx-auto">
+                {t('pdfSectionSubtitle')}
+              </p>
+            </div>
+
+            {/* Birthdate + Delivery Channel selector */}
+            <div className="max-w-md mx-auto mb-8 space-y-4">
+              {/* Birthdate */}
+              <div>
+                <label className="block text-sm text-white/70 mb-1.5">{t('pdfBirthdate')}</label>
+                <input
+                  type="text"
+                  placeholder={t('pdfBirthdatePlaceholder')}
+                  value={pdfBirthdate}
+                  onChange={(e) => setPdfBirthdate(e.target.value)}
+                  className="w-full rounded-xl border border-gold/20 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-gold/50 focus:outline-none focus:ring-1 focus:ring-gold/30 transition"
+                />
+              </div>
+
+              {/* Phone number */}
+              <div>
+                <label className="block text-sm text-white/70 mb-1.5">{t('pdfPhone')}</label>
+                <input
+                  type="tel"
+                  placeholder={t('pdfPhonePlaceholder')}
+                  value={pdfPhone}
+                  onChange={(e) => setPdfPhone(e.target.value)}
+                  className="w-full rounded-xl border border-gold/20 bg-white/5 px-4 py-3 text-white placeholder:text-white/30 focus:border-gold/50 focus:outline-none focus:ring-1 focus:ring-gold/30 transition"
+                />
+              </div>
+
+              {/* Delivery channel toggle */}
+              <div>
+                <label className="block text-sm text-white/70 mb-1.5">{t('pdfDeliveryLabel')}</label>
+                <div className="flex gap-1 rounded-[10px] bg-white/5 p-1">
+                  <button
+                    onClick={() => setDeliveryChannel('telegram')}
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-[8px] px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                      deliveryChannel === 'telegram'
+                        ? 'bg-gold/15 text-gold shadow-sm'
+                        : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+                    }`}
+                  >
+                    <Send className="h-4 w-4" strokeWidth={1.5} />
+                    Telegram
+                  </button>
+                  <button
+                    onClick={() => setDeliveryChannel('whatsapp')}
+                    className={`flex-1 flex items-center justify-center gap-2 rounded-[8px] px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
+                      deliveryChannel === 'whatsapp'
+                        ? 'bg-gold/15 text-gold shadow-sm'
+                        : 'text-white/40 hover:text-white/60 hover:bg-white/5'
+                    }`}
+                  >
+                    <MessageCircle className="h-4 w-4" strokeWidth={1.5} />
+                    WhatsApp
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* PDF packages grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-4xl mx-auto">
+              {pdfPackages.map((pkg, idx) => {
+                const Icon = pkg.icon;
+                const isLoading = loadingKey === pkg.key;
+                return (
+                  <motion.div
+                    key={pkg.key}
+                    variants={fadeUp}
+                    initial="hidden"
+                    animate="visible"
+                    custom={idx}
+                  >
+                    <PremiumCard className="flex flex-col h-full p-5">
+                      <div className="flex h-11 w-11 items-center justify-center rounded-[10px] border border-gold/20 bg-gold/10">
+                        <Icon className="h-5 w-5 text-gold" strokeWidth={1.5} />
+                      </div>
+                      <h3 className="mt-3 text-lg font-semibold text-white">
+                        {t(`${pkg.tKey}.title`)}
+                      </h3>
+                      <p className="mt-1 text-xs text-white/50 leading-relaxed line-clamp-3">
+                        {t(`${pkg.tKey}.desc`)}
+                      </p>
+                      <div className="mt-auto pt-4">
+                        <span className="text-2xl font-bold text-gold">
+                          {t(`${pkg.tKey}.price`)}
+                        </span>
+                      </div>
+                      <div className="mt-3">
+                        <GoldButton
+                          onClick={() => handlePdfCheckout(pkg.key)}
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          disabled={isLoading || !pdfBirthdate || !pdfPhone}
+                        >
+                          {isLoading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            t('pdfBuy')
+                          )}
+                        </GoldButton>
+                      </div>
+                    </PremiumCard>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </motion.div>
 
           {/* Free consultation CTA */}
           <motion.div

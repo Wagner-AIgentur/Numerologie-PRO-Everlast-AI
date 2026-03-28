@@ -238,6 +238,36 @@
       "features": ["Tag, Monat und Jahr der Geburt", "Aktuelle Lebensperioden", "Karmische Knoten und Prüfungen", "Blockaden und Hindernisse bei der Verwirklichung", "Mögliche Berufe und Talente", "Wege zur Selbstverwirklichung"],
       "resultsTitle": "Im Ergebnis werden Sie:",
       "results": ["Die wichtigsten Stützpunkte in Ihrem Leben kennen", "Ihre Stärken und Hindernisse sehen", "Empfehlungen zur Entfaltung Ihres Potenzials erhalten"]
+    },
+    "pdfSectionTitle": "PDF-Analysen",
+    "pdfSectionSubtitle": "Persönliche Analyse deines Geburtsdatums als PDF",
+    "pdfDeliveryLabel": "Wie möchtest du die PDF erhalten:",
+    "pdfBirthdate": "Geburtsdatum",
+    "pdfBirthdatePlaceholder": "TT.MM.JJJJ",
+    "pdfPhone": "Deine Telefonnummer (WhatsApp / Telegram)",
+    "pdfPhonePlaceholder": "+49 176 1234567",
+    "pdfBuy": "Kaufen",
+    "pdfSuccessTitle": "Vielen Dank für deine Bestellung!",
+    "pdfSuccessText": "Wir haben deine Bestellung erhalten. Swetlana erstellt deine persönliche PDF-Analyse und meldet sich bei dir über den gewählten Kanal innerhalb von 24 Stunden.",
+    "kodDnyaRozhdeniya": {
+      "title": "Geburtstagscode",
+      "desc": "Dein Geburtstag ist deine Visitenkarte. Erfahre, welche Qualitäten du aus der Vergangenheit mitbringst und wie Menschen dich wahrnehmen.",
+      "price": "9,99€"
+    },
+    "kodSamorealizacii": {
+      "title": "Selbstverwirklichungscode",
+      "desc": "Wie entfaltest du dein Potenzial? Erfahre deinen Code der Selbstverwirklichung und den Weg zu deinen Zielen.",
+      "price": "9,99€"
+    },
+    "kodKarmicheskogoUzla": {
+      "title": "Karmischer Knotencode",
+      "desc": "Welche Fehler aus der Vergangenheit trägst du mit dir? Welche Prüfungen erwarten dich und wie überwindest du sie?",
+      "price": "9,99€"
+    },
+    "prognozNaGodPdf": {
+      "title": "Jahresprognose PDF",
+      "desc": "Was bringt dir das aktuelle Jahr? Erkenne die Energien und Chancen, die vor dir liegen.",
+      "price": "19,99€"
     }
   },
   "testimonials": {
